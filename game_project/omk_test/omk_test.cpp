@@ -1,136 +1,201 @@
+﻿화
+15GB 중 19% 사용됨
+약관 · 개인정보처리방침 · 프로그램 정책
+마지막 계정 활동: 1시간 전
+세부정보
 ﻿#include <iostream>
 #include <locale> // For Unicode output
 #include <limits> // For numeric_limits
 #include <vector>
-
 using namespace std;
 
-// 전역 변수 (필요시 클래스 내부로 옮길 수 있습니다)
-const int SIZE = 19; // 바둑판 크기
-
-// 돌을 표현하는 클래스
-class stone {
-public:
-    int x, y;
-    int color; // 0: 빈 칸, 1: 흑돌, 2: 백돌
-    stone(int x = -1, int y = -1, int color = 0) : x(x), y(y), color(color) {}
-};
-
-// 바둑판과 게임 로직을 관리하는 클래스
 class field {
 public:
-    stone** logic_baduk;
 
-    // 초기자: 19x19 stone 객체 배열을 동적으로 생성하고 초기화합니다.
-    stone** logic_arr() {
-        stone** arr = new stone*[SIZE];
-        for (int i = 0; i < SIZE; i++) {
-            arr[i] = new stone[SIZE];
-            for (int j = 0; j < SIZE; j++) {
-                arr[i][j].x = i;
-                arr[i][j].y = j;
-                arr[i][j].color = 0; // 초기 색상은 0 (빈 칸)
+    int** logic_arr() {
+        int** l_omk = new int* [19];
+        for (int i = 0; i < 19; i++) {
+            l_omk[i] = new int[19];
+            for (int j = 0; j < 19; j++) {
+                l_omk[i][j] = 0;
             }
         }
-        return arr;
+        return l_omk;
     }
 
-    // field 클래스 생성자
     field() {
-        logic_baduk = logic_arr();
+        logic_omk = logic_arr();
     }
+    int** logic_omk;
 
-    // 바둑판을 출력하는 함수
-    void print_board() {
-        // 유니코드 출력을 위해 locale 설정 (Windows 환경에서 한글 깨짐 방지)
-        // setlocale(LC_ALL, "ko_KR.UTF-8"); // Linux/macOS
-        setlocale(LC_ALL, ""); // Windows
+    bool win_omk(int x, int y, int color) {
+        int arr[4][9] = { 0 }; // Count stones
+        printf("color : %d, position : (%d / %d)\n", color, x + 1, y + 1);
 
-        printf("   "); // 여백
-        for (int i = 1; i <= SIZE; i++) printf("%2d", i);
+        // Check horizontally
+        int cnt = 0;
+        int cnt_stone = 0;
+        printf("%-20s", "Horizontally:");
+        for (int i = y - 4; i < y + 5; i++) {
+            if (i >= 0 && i < 19) {
+                if (logic_omk[x][i] == color) {
+                    cnt_stone++;
+                }
+                else {
+                    cnt_stone = 0;
+                }
+                arr[0][cnt++] = cnt_stone;
+                printf("[%d : %2d / %2d] ", cnt_stone, x, i);
+                if (cnt_stone == 6) return false; // 6 stones
+            }
+        }
         printf("\n");
 
-        for (int i = 0; i < SIZE; i++) {
-            printf("%2d ", i + 1);
-            for (int j = 0; j < SIZE; j++) {
-                if (logic_baduk[i][j].color == 0) {
-                    if (i == 0) {
-                        if (j == 0) printf("┌ ");
-                        else if (j == SIZE - 1) printf("┐ ");
-                        else printf("┬ ");
-                    } else if (i == SIZE - 1) {
-                        if (j == 0) printf("└ ");
-                        else if (j == SIZE - 1) printf("┘ ");
-                        else printf("┴ ");
-                    } else {
-                        if (j == 0) printf("├ ");
-                        else if (j == SIZE - 1) printf("┤ ");
-                        else printf("┼ ");
-                    }
-                } else {
-                    if (logic_baduk[i][j].color == 1) printf("● "); // 흑돌
-                    else printf("○ "); // 백돌
+        // Check vertically
+        printf("%-20s", "Vertically:");
+        cnt = 0;
+        cnt_stone = 0;
+        for (int i = x - 4; i < x + 5; i++) {
+            if (i >= 0 && i < 19) {
+                if (logic_omk[i][y] == color) {
+                    cnt_stone++;
                 }
+                else {
+                    cnt_stone = 0;
+                }
+                arr[1][cnt++] = cnt_stone;
+                printf("[%d : %2d / %2d] ", cnt_stone, i, y);
+                if (cnt_stone == 6) return false; // 6 stones
+            }
+        }
+        printf("\n");
+
+        // Check diagonally up
+        printf("%-20s", "Upward Diagonally: ");
+        cnt = 0;
+        cnt_stone = 0;
+        int j = y + 4;
+        for (int i = x - 4; i < x + 5; i++) {
+            if (i >= 0 && i < 19 && j >= 0 && j < 19) {
+                if (logic_omk[i][j] == color) {
+                    cnt_stone++;
+                }
+                else {
+                    cnt_stone = 0;
+                }
+                arr[2][cnt++] = cnt_stone;
+                if (cnt_stone == 6) return false; // 6 stones
+                printf("[%d : %2d / %2d] ", cnt_stone, i, j);
+            }
+            j--;
+        }
+        printf("\n");
+
+        // Check diagonally down
+        printf("%-20s", "Downward Diagonally:");
+        j = y - 4;
+        cnt = 0;
+        cnt_stone = 0;
+        for (int i = x - 4; i < x + 5; i++) {
+            if (i >= 0 && i < 19 && j >= 0 && j < 19) {
+                if (logic_omk[i][j] == color) {
+                    cnt_stone++;
+                }
+                else {
+                    cnt_stone = 0;
+                }
+                arr[3][cnt++] = cnt_stone;
+                if (cnt_stone == 6) return false; // 6 stones
+                printf("[%d : %2d / %2d] ", cnt_stone, j, i);
+            }
+            j++;
+        }
+        printf("\n");
+
+        // Print results (for debugging)
+        for (int i = 0; i < 4; i++) {
+            printf("%d : ", i);
+            for (int j = 0; j < 9; j++) {
+                printf("%d ", arr[i][j]);
+                if (arr[i][j] == 5) return true;
             }
             printf("\n");
         }
+
+        return false;
     }
 
-    // 게임 플레이 로직
+    void print_board() {
+        printf("-----");
+        for (int i = 1; i < 20; i++)printf("%2d", i);
+        printf("\n");
+
+        for (int i = 0; i < 19; i++) {
+            printf("%02d : ", i + 1);
+                for (int j = 0; j < 19; j++) {
+                    if (logic_omk[i][j] == 0) {
+                        if (i == 0) {
+                            if (j == 0) printf("┌");
+                            else if (j == 18) printf("┐");
+                            else printf("┬");
+                        }
+                        else if (i == 18) {
+                            if (j == 0) printf("└");
+                            else if (j == 18) printf("┘");
+                            else printf("┴");
+                        }
+                        else {
+                            if (j == 0) printf("├");
+                            else if (j == 18) printf("┤");
+                            else printf("┼");
+                        }
+                    }
+                    else {
+                        if (logic_omk[i][j] == 1) printf("●");
+                        else printf("○");
+                    }
+                }
+                printf("\n");
+            }
+    }
+
     void play() {
         print_board();
-        int black = 1, white = 2;
-        int currentPlayer = black; // 첫 턴은 흑돌
+        int black = 1, white = 2, color = 1;
         int turn = 0;
         int x, y;
-
-        cout << "Welcome to the Go game!" << endl;
-        cout << "Enter '0 0' at any time to quit." << endl;
-
         while (true) {
-            cout << (currentPlayer == black ? "Black" : "White") << " turn. Enter the position to place your stone (row, col): ";
+            cout << "Enter the position to place your stone (x,y): ";
             cin >> x >> y;
-
-            // 게임 종료 조건
-            if (x == 0 && y == 0) {
-                cout << "Game ended by player request." << endl;
-                break;
-            }
-
-            // 유효성 검사
-            if (cin.fail() || x < 1 || x > SIZE || y < 1 || y > SIZE || logic_baduk[x - 1][y - 1].color != 0) {
-                cin.clear(); // 입력 버퍼 초기화
-                cin.ignore(numeric_limits<streamsize>::max(), '\n'); // 잘못된 입력 제거
+            if (x < 1 || x > 19 || y < 1 || y > 19 || logic_omk[x - 1][y - 1] != 0) {
                 cout << "Invalid position. Please try again." << endl;
                 continue;
             }
+            logic_omk[x - 1][y - 1] = color;
 
-            // 돌 놓기
-            logic_baduk[x - 1][y - 1].color = currentPlayer;
-
-            // 콘솔 화면 지우기 (Windows에서만 작동, Linux/macOS는 `clear` 명령 사용)
-            // system("cls");
-            // system("clear"); // cross-platform: system("cls || clear");
-
+            system("cls"); // Clear console screen (Windows specific)
             print_board();
-
-            // 턴 전환
-            currentPlayer = (currentPlayer == black) ? white : black;
+            if (win_omk(x - 1, y - 1, color)) {
+                system("cls");
+                print_board();
+                (color % 2 == 1) ? cout << "Winner: Black" << endl : cout << "Winner: White" << endl;
+                break;
+            }
+            color = (turn % 2 == 0) ? white : black;
             turn++;
         }
     }
-                                
-    // 소멸자: 동적으로 할당된 메모리 해제
+
     ~field() {
-        for (int i = 0; i < SIZE; i++) {
-            delete[] logic_baduk[i];
+        for (int i = 0; i < 19; i++) {
+            delete[] logic_omk[i];
         }
-        delete[] logic_baduk;
+        delete[] logic_omk;
     }
 };
 
 int main() {
-    field baduk;
-    baduk.play();
+    field omk;
+    omk.play();
     return 0;
 }
